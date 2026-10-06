@@ -1,0 +1,23 @@
+{
+  "sdk": "anthropic",
+  "sdk_version": "0.125.0",
+  "base_url_usado": "http://localhost:4000",
+  "model": "fronteira-haiku",
+  "id": "msg_011CewiKHZHpH7Aikj39XpXg",
+  "stop_reason": "end_turn",
+  "content": "Um gateway de IA é uma plataforma que funciona como intermediária entre aplicações e diversos modelos de inteligência artificial, centralizando o acesso, gerenciamento e roteamento de requisições.",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "not_available",
+    "input_tokens": 33,
+    "output_tokens": 50,
+    "output_tokens_details": null,
+    "server_tool_use": null,
+    "service_tier": "standard"
+  }
+}

@@ -1,0 +1,1 @@
+{"policy_name":"protecao-total","inherit":"protecao-base","scope":{"teams":[],"keys":[],"models":[],"tags":[]},"guardrails":{"add":["mascara-pii"],"remove":[]},"resolved_guardrails":["mascara-pii","mascara-pii-log"],"inheritance_chain":["protecao-base","protecao-total"]}

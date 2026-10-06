@@ -1,0 +1,15 @@
+# segredos e chaves geradas
+.env
+.demo-keys
+*.env.local
+
+# estado local da avaliação
+.store-id
+
+# ambientes e caches Python
+.venv/
+__pycache__/
+
+# volumes e sistema
+*.log
+.DS_Store

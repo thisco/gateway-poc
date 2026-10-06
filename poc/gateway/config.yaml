@@ -1,0 +1,333 @@
+# Catálogo de modelos do gateway de IA (PoC)
+# Três camadas: fronteira (SaaS), local (soberania) e simulado (resiliência da demo)
+
+model_list:
+  # Camada 1 — modelo de fronteira via provedor SaaS (requer ANTHROPIC_API_KEY no .env)
+  - model_name: fronteira-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+    model_info:
+      description: "Modelo de fronteira (SaaS) — perfil padrão de desenvolvimento"
+
+  - model_name: fronteira-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      input_cost_per_token: 0.000001    # US$ 1,00 / 1M tokens (platform.claude.com, 2026-09-10)
+      output_cost_per_token: 0.000005   # US$ 5,00 / 1M tokens
+    model_info:
+      description: "Modelo de fronteira econômico (SaaS) — tarefas simples; preço registrado explicitamente para FinOps fiel"
+
+  - model_name: fronteira-gpt-nano
+    litellm_params:
+      model: openai/gpt-5-nano
+      api_key: os.environ/OPENAI_API_KEY
+      input_cost_per_token: 0.00000005  # US$ 0,05 / 1M tokens (developers.openai.com, 2026-09-10)
+      output_cost_per_token: 0.0000004  # US$ 0,40 / 1M tokens
+    model_info:
+      description: "OpenAI mais barato (gpt-5-nano) — preço registrado explicitamente para FinOps fiel"
+
+  # Camada 1 — DeepSeek (SaaS, API própria do provedor). Registrado em 2026-09-25
+  # com os IDs reais retornados por GET https://api.deepseek.com/models
+  # (`deepseek-flash` = DeepSeek-V4.1-Flash, `deepseek-v4-pro` = DeepSeek-V4-Pro;
+  # ambos com janela de 1M tokens). Sem `input_cost_per_token` explícito de
+  # propósito: diferente de fronteira-haiku/fronteira-gpt-nano, o mapa nativo do
+  # LiteLLM já traz preço para `deepseek/deepseek-flash` (US$ 0,30/1,20 por 1M
+  # in/out) e `deepseek/deepseek-v4-pro` (US$ 1,32/3,96) — conferido em
+  # litellm.model_cost dentro do container, então o FinOps já sai fiel.
+  # ATENÇÃO DE GOVERNANÇA: provedor sediado fora do país — o dado sai da
+  # organização E da jurisdição brasileira. Mesma restrição de uso do sandbox
+  # OpenRouter: apenas dados públicos/teste, nunca dado de cliente ou PII.
+  - model_name: fronteira-deepseek-flash
+    litellm_params:
+      model: deepseek/deepseek-flash
+      api_key: os.environ/DEEPSEEK_API_KEY
+    model_info:
+      description: "DeepSeek-V4.1-Flash (SaaS, 1M ctx, texto+imagem) — APENAS dados públicos; provedor fora da jurisdição brasileira"
+
+  - model_name: fronteira-deepseek-pro
+    litellm_params:
+      model: deepseek/deepseek-v4-pro
+      api_key: os.environ/DEEPSEEK_API_KEY
+    model_info:
+      description: "DeepSeek-V4-Pro (SaaS, 1M ctx, texto) — APENAS dados públicos; provedor fora da jurisdição brasileira"
+
+  # Camada 2 — modelos locais on-premises (dado não sai do ambiente)
+  - model_name: local-hermes
+    litellm_params:
+      model: openai/hermes-local
+      api_base: http://host.docker.internal:8090/v1
+      api_key: "local"
+    model_info:
+      description: "Modelo aberto (~34B) servido no host via llama.cpp — eixo de soberania de dados"
+
+  - model_name: local-qwen
+    litellm_params:
+      model: ollama_chat/qwen2.5:0.5b
+      api_base: http://ollama:11434
+    model_info:
+      description: "Modelo aberto rodando local — eixo de soberania de dados"
+
+  # Camada 2 — embeddings locais para o cenário de vector stores (avaliação)
+  - model_name: embedding-nomic
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: http://ollama:11434
+    model_info:
+      description: "Embeddings locais (Ollama) — base do vector store soberano"
+      mode: embedding
+
+  # Sandbox — modelos free da OpenRouter (custo zero; SaaS sem soberania — ver
+  # benchmark de gateways). Apenas para dados públicos/testes. Lista obtida em
+  # 2026-09-10 via https://openrouter.ai/api/v1/models (pricing.prompt/completion
+  # == "0"); excluídos google/lyria-* (áudio/música, não é chat) e o meta
+  # `openrouter/free` (não é um modelo real).
+  #
+  # Revalidação 2026-09-25 (chamada real a cada um dos 18): 14 responderam,
+  # 4 estão indisponíveis e ficam registrados aqui como evidência de que o
+  # catálogo de um gateway apodrece sem revalidação periódica —
+  #   * nex-agi/nex-n2.5-mini:free e nex-n2.5-pro:free → 404 "No endpoints
+  #     found": descatalogados pela OpenRouter, o ID não existe mais;
+  #   * thinkingmachines/inkling:free e inkling-small:free → 403 "only
+  #     available on agentic harnesses": política do provedor mudou, o
+  #     modelo existe mas não é chamável por API genérica.
+  # Entre os 14 que funcionam, gemma-26b, gemma-31b e laguna-s devolveram 429
+  # intermitente (limite de taxa do tier free) — alternaram entre 200 e 429 em
+  # duas varreduras consecutivas; não é defeito de config, é o free tier.
+  - model_name: sandbox-nex-mini
+    litellm_params:
+      model: openrouter/nex-agi/nex-n2.5-mini:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-nex-pro
+    litellm_params:
+      model: openrouter/nex-agi/nex-n2.5-pro:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-ling-sante
+    litellm_params:
+      model: openrouter/inclusionai/ling-3.0-flash-sante:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-ling-fin
+    litellm_params:
+      model: openrouter/inclusionai/ling-3.0-flash-fin:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-dots-note
+    litellm_params:
+      model: openrouter/dots-studio/dots-3-note-preview:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-lfm-2-6b
+    litellm_params:
+      model: openrouter/liquid/lfm-2.5-2.6b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-nemotron-lightning
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3.5-lightning:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-inkling-small
+    litellm_params:
+      model: openrouter/thinkingmachines/inkling-small:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-inkling
+    litellm_params:
+      model: openrouter/thinkingmachines/inkling:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-laguna-s
+    litellm_params:
+      model: openrouter/poolside/laguna-s-2.1:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-laguna-xs
+    litellm_params:
+      model: openrouter/poolside/laguna-xs-2.1:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-north-code
+    litellm_params:
+      model: openrouter/cohere/north-mini-code:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-nemotron-safety
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3.5-content-safety:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-nemotron-ultra
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-nemotron-omni
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-gemma-26b
+    litellm_params:
+      model: openrouter/google/gemma-4-26b-a4b-it:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-gemma-31b
+    litellm_params:
+      model: openrouter/google/gemma-4-31b-it:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  - model_name: sandbox-nemotron-super
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-super-120b-a12b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+    model_info:
+      description: "Sandbox OpenRouter (free) — APENAS dados públicos; SaaS sem soberania (ver benchmark de gateways)"
+
+  # Camada 3 — endpoint simulado (demo funciona sem nenhum provedor)
+  - model_name: simulado
+    litellm_params:
+      model: openai/simulado
+      api_key: "mock"
+      mock_response: "Resposta simulada pelo gateway de IA da PoC — nenhum modelo real foi chamado. Esta chamada foi autenticada, autorizada, contabilizada e registrada para auditoria."
+      # Custo fictício para demonstrar controle de orçamento sem gasto real
+      input_cost_per_token: 0.02
+      output_cost_per_token: 0.02
+    model_info:
+      description: "Endpoint simulado — resiliência da demonstração"
+
+# Avaliação: cenário 01 — guardrails Presidio auto-hospedados (P5, P6).
+# default_on: false nos dois para não afetar a demo básica da PoC.
+guardrails:
+  - guardrail_name: "mascara-pii"
+    litellm_params:
+      guardrail: presidio
+      mode: "pre_call"
+      presidio_analyzer_api_base: http://presidio-analyzer:3000
+      presidio_anonymizer_api_base: http://presidio-anonymizer:3000
+      presidio_ad_hoc_recognizers: "/app/reconhecedor-cpf.json"
+      default_on: false
+  - guardrail_name: "mascara-pii-log"
+    litellm_params:
+      guardrail: presidio
+      mode: "logging_only"
+      presidio_analyzer_api_base: http://presidio-analyzer:3000
+      presidio_anonymizer_api_base: http://presidio-anonymizer:3000
+      default_on: false
+
+# Avaliação: cenário 02 — guardrail policies (P5, P10).
+# protecao-total herda de protecao-base e adiciona o guardrail pre_call.
+policies:
+  protecao-base:
+    guardrails:
+      add: [mascara-pii-log]
+  protecao-total:
+    inherit: protecao-base
+    guardrails:
+      add: [mascara-pii]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  store_model_in_db: true
+
+litellm_settings:
+  drop_params: true
+
+# Avaliação: cenário 03 — MCP Gateway (P1, P4, P5).
+# deepwiki é um servidor MCP público sem autenticação, usado apenas como alvo
+# funcional do teste de gateway; em produção o registro seria de servidores
+# MCP internos — a capacidade avaliada (registro, permissão, auditoria) é a
+# mesma.
+mcp_servers:
+  deepwiki:
+    url: "https://mcp.deepwiki.com/mcp"
+    transport: "http"
+
+# Avaliação: cenário 04 — Vector Stores (P3, P6). Store soberano: embeddings
+# Ollama (embedding-nomic) + pgvector local via o conector litellm-pgvector.
+# vector_store_id é o UUID real gerado pelo conector na criação do store
+# (POST direto ao conector — o gateway não tem como pré-atribuir um ID
+# amigável). Este UUID é mantido em sincronia com o store real pelo script
+# `avaliacao/cenarios/04-vector-stores/setup.sh` (idempotente: extensão
+# vector, migração de schema, ajuste de dimensão do vetor, criação/reuso do
+# store e, se o UUID divergir, atualização automática desta linha + restart
+# do gateway) — rode-o após qualquer `db-vectors` novo/recriado; sequência
+# completa documentada no README do cenário, §3.1. custom_llm_provider é
+# "pg_vector" (com underscore) — o rascunho do brief tinha "pgvector", que
+# não existe no enum de provedores do LiteLLM (conferido no código-fonte do
+# gateway, litellm.LlmProviders).
+vector_store_registry:
+  - vector_store_name: "base-governanca"
+    litellm_params:
+      vector_store_id: "3b36b13f-3c49-4142-9b71-91deff246264"
+      custom_llm_provider: "pg_vector"
+      api_base: "http://vector-connector:8000"
+      api_key: os.environ/LITELLM_MASTER_KEY
+      vector_store_description: "Base de conhecimento de governança (soberana: pgvector local + embeddings Ollama)"
+
+# Avaliação: cenário 06 — Agentes A2A e Tool Calling (P1, P3, P4, P5).
+# agente-eco é um agente A2A mínimo local, implementação própria (stdlib
+# Python, sem a2a-sdk — ver avaliacao/cenarios/06-agentes-tools/dados/agente-eco/server.py
+# para a nota sobre a incompatibilidade do a2a-sdk Python encontrada na
+# avaliação), somente leitura (responde perguntas citando 3 regras fixas de
+# política, sem ações de escrita). Para agentes declarados aqui no config, o
+# LiteLLM NÃO busca o agent card do upstream: ele serve `agent_card_params`
+# diretamente (apenas reescrevendo `url` para o proxy) — confirmado lendo
+# `litellm/proxy/agent_endpoints/a2a_endpoints.py` (`get_agent_card`) dentro
+# do container do gateway. `cost_per_query` habilita o rastreio de custo por
+# invocação (AG-04) via `litellm/a2a_protocol/cost_calculator.py`.
+agents:
+  - agent_name: eco-governanca
+    agent_card_params:
+      protocolVersion: "0.3"
+      name: "Eco de Governança"
+      description: "Agente A2A local, somente leitura, que responde perguntas citando regras fixas de política de governança de IA."
+      url: "http://agente-eco:9000/"
+      version: "1.0.0"
+      capabilities: {}
+      defaultInputModes: ["text"]
+      defaultOutputModes: ["text"]
+      skills:
+        - id: "consulta-politica"
+          name: "Consulta de política"
+          description: "Responde perguntas citando regras fixas de política de governança de IA (somente leitura)."
+          tags: ["governanca"]
+    litellm_params:
+      cost_per_query: 0.001

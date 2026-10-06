@@ -1,0 +1,46 @@
+{
+  "caso": "SO-05",
+  "tipo": "consistencia (choice repetido)",
+  "n_repeticoes": 10,
+  "temperatura": "default do backend (nao exposta pelo system-one-adapter — ver docstring deste script)",
+  "erros_de_execucao": 0,
+  "decisoes": [
+    "m7g",
+    "m7g",
+    "m7g",
+    "m7g",
+    "m7g",
+    "m7g",
+    "m7g",
+    "c7g",
+    "m7g",
+    "m7g"
+  ],
+  "contagem_decisoes": {
+    "m7g": 9,
+    "c7g": 1
+  },
+  "decisao_modal": "m7g",
+  "frequencia_decisao_modal": 9,
+  "estabilidade_decisao_modal": 0.9,
+  "variancia_probabilidades_por_opcao": {
+    "m7g": {
+      "media": 0.6299,
+      "desvio_padrao": 0.2194
+    },
+    "c7g": {
+      "media": 0.23,
+      "desvio_padrao": 0.1412
+    },
+    "r7g": {
+      "media": 0.0944,
+      "desvio_padrao": 0.0689
+    },
+    "t4g": {
+      "media": 0.0457,
+      "desvio_padrao": 0.0502
+    }
+  },
+  "confidence_media": 0.5362,
+  "confidence_desvio_padrao": 0.2384
+}

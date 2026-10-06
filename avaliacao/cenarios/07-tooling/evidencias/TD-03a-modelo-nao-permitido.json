@@ -1,0 +1,2 @@
+{"error":{"message":"key not allowed to access model. This key can only access models=['simulado']. Tried to access fronteira-haiku","type":"key_model_access_denied","param":"model","code":"403"}}
+{"http_status":403}

@@ -1,0 +1,131 @@
+name: governanca-ia-poc
+
+services:
+  gateway:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: poc-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      DATABASE_URL: postgresql://gateway:gateway@db:5432/gateway
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      STORE_MODEL_IN_DB: "True"
+    volumes:
+      - ./gateway/config.yaml:/app/config.yaml:ro
+      - ../avaliacao/cenarios/01-guardrails/dados/reconhecedor-cpf.json:/app/reconhecedor-cpf.json:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: poc-db
+    environment:
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: gateway
+      POSTGRES_DB: gateway
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gateway -d gateway"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: poc-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+
+  # --- Avaliação: cenário 01 (guardrails auto-hospedados) ---
+  presidio-analyzer:
+    image: mcr.microsoft.com/presidio-analyzer:latest
+    container_name: poc-presidio-analyzer
+    profiles: ["guardrails"]
+
+  presidio-anonymizer:
+    image: mcr.microsoft.com/presidio-anonymizer:latest
+    container_name: poc-presidio-anonymizer
+    profiles: ["guardrails"]
+
+  # --- Avaliação: cenário 04 (vector store soberano) ---
+  # Serviço separado do `db` de governança: a imagem pgvector é debian/glibc e
+  # o volume existente foi criado com postgres alpine/musl — trocar a imagem do
+  # banco principal arriscaria o collation do volume da demo.
+  db-vectors:
+    image: pgvector/pgvector:pg16
+    container_name: poc-db-vectors
+    profiles: ["vectors"]
+    environment:
+      POSTGRES_USER: vectors
+      POSTGRES_PASSWORD: vectors
+      POSTGRES_DB: vectors
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vectors -d vectors"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db_vectors_data:/var/lib/postgresql/data
+
+  # Nomes de variável conferidos no README do projeto em 2026-09-10 (usa
+  # pydantic-settings com delimitador `__` para chaves aninhadas — não são os
+  # nomes "óbvios" LITELLM_PROXY_*): DATABASE_URL, EMBEDDING__BASE_URL,
+  # EMBEDDING__API_KEY, EMBEDDING__MODEL, EMBEDDING__DIMENSIONS,
+  # SERVER_API_KEY (chave própria do conector, não documentada no brief;
+  # reaproveita a master key do gateway por simplicidade na PoC).
+  vector-connector:
+    build: https://github.com/BerriAI/litellm-pgvector.git
+    container_name: poc-vector-connector
+    profiles: ["vectors"]
+    ports:
+      # 8001 conflita com outro projeto local (container `outro-projeto`) nesta
+      # máquina de avaliação — usamos 8002 no host. Porta interna (8000,
+      # usada pelo gateway via `http://vector-connector:8000`) é inalterada.
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql://vectors:vectors@db-vectors:5432/vectors
+      EMBEDDING__BASE_URL: http://gateway:4000
+      EMBEDDING__API_KEY: ${LITELLM_MASTER_KEY}
+      # Prefixo "openai/" obrigatório: o conector chama litellm.aembedding()
+      # do SDK Python (não um cliente HTTP puro), que precisa saber o
+      # provedor para rotear a chamada. Como api_base aponta para o gateway
+      # LiteLLM (compatível com a API OpenAI), o provedor correto é "openai"
+      # — sem o prefixo, o SDK falha com "LLM Provider NOT provided"
+      # mesmo com api_base/api_key corretos (descoberto por execução real).
+      EMBEDDING__MODEL: openai/embedding-nomic
+      EMBEDDING__DIMENSIONS: 768
+      SERVER_API_KEY: ${LITELLM_MASTER_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    depends_on:
+      db-vectors:
+        condition: service_healthy
+
+  # --- Avaliação: cenário 06 (agentes A2A e tool calling) ---
+  # Agente A2A mínimo local ("eco de governança"): responde perguntas citando
+  # 3 regras fixas de política, sem ações de escrita. Implementação própria
+  # (stdlib, sem a2a-sdk) — ver nota em dados/agente-eco/server.py sobre a
+  # incompatibilidade do a2a-sdk Python encontrada na avaliação.
+  agente-eco:
+    build: ../avaliacao/cenarios/06-agentes-tools/dados/agente-eco
+    container_name: poc-agente-eco
+    profiles: ["agents"]
+    ports:
+      - "9100:9000"
+
+volumes:
+  db_data:
+  ollama_data:
+  db_vectors_data:

@@ -1,0 +1,13 @@
+{
+  "chave": "sk-REDACTED (models: [simulado], sem object_permission)",
+  "mcp_tools_list": {"tools_visiveis":0,"erro":"unexpected_error"},
+  "mcp_http_status": "200",
+  "vector_store_list_visiveis": 1,
+  "vector_store_http_status": "200",
+  "agentes_visiveis": 1,
+  "agentes_http_status": "200",
+  "skills_visiveis": 10,
+  "skills_http_status": "200",
+  "modelos_visiveis": 1,
+  "modelos_http_status": "200"
+}

@@ -1,0 +1,2 @@
+{"error":{"message":"Budget has been exceeded! Key=td03-erros-governanca (sk-...58Aw) Current cost: 0.5999999999999764, Max budget: 0.001","type":"budget_exceeded","param":null,"code":"429"}}
+{"http_status":429}

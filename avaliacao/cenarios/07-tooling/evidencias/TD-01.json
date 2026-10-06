@@ -1,0 +1,36 @@
+{
+  "sdk": "openai",
+  "sdk_version": "2.48.0",
+  "base_url_usado": "http://localhost:4000/v1",
+  "model": "fronteira-haiku",
+  "id": "chatcmpl-d563ec1f-a6ff-4157-b73d-10c2e16968a5",
+  "finish_reason": "stop",
+  "content": "Um gateway de IA é uma plataforma que gerencia, roteia e controla o acesso a múltiplos modelos e serviços de inteligência artificial, funcionando como intermediária entre usuários e provedores de IA.",
+  "usage": {
+    "completion_tokens": 58,
+    "prompt_tokens": 33,
+    "total_tokens": 91,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": null,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": null,
+      "text_tokens": 58
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cache_write_tokens": 0,
+      "cached_tokens": 0,
+      "text_tokens": 33,
+      "cache_creation_tokens": 0,
+      "cache_creation_token_details": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      }
+    },
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "inference_geo": "not_available",
+    "service_tier": "standard"
+  }
+}

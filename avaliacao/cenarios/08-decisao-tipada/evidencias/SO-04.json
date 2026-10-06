@@ -1,0 +1,8 @@
+{
+  "chave": "sk-REDACTED (alias cenario-08)",
+  "n_chamadas_no_log_unificado": 13,
+  "modelos_usados": ["openai/hermes-local"],
+  "spend_acumulado": 0.0,
+  "max_budget": 2.0,
+  "nota": "modelos locais (local-hermes/local-qwen) não têm custo por token registrado no config.yaml -> spend=0.0 é esperado; o controle de budget existe e é aplicável (HTTP 429 budget_exceeded se estourasse), mas não há como este teste específico disparar o corte com modelos gratuitos — achado registrado no README SS8, não um gap deste cenário."
+}

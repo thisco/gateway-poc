@@ -1,0 +1,15 @@
+{
+  "endpoint_modelos": "GET /v1/models",
+  "n_modelos": 25,
+  "endpoint_mcp": "GET /mcp-rest/tools/list",
+  "tools_mcp": ["ask_question","read_wiki_contents","read_wiki_structure"],
+  "endpoint_agentes": "GET /v1/agents",
+  "agentes": ["eco-governanca"],
+  "endpoint_vetores_gateway": "GET /vector_store/list",
+  "vetores_gateway": ["base-governanca"],
+  "endpoint_vetores_openai_compat": "GET /v1/vector_stores",
+  "n_vetores_openai_compat_MESMO_STORE": 0,
+  "endpoint_skills": "GET /v1/skills?beta=true",
+  "n_skills": 10,
+  "achado": "5 famílias de endpoint distintas (prefixos e formatos diferentes: /v1/models, /mcp-rest/tools/list, /v1/agents, /vector_store/list, /v1/skills), nenhum endpoint único de inventário; e /v1/vector_stores (compatível OpenAI) diverge de /vector_store/list para o MESMO store (0 vs. 1) — ver README §8"
+}
